@@ -3,6 +3,39 @@ import { useKBar } from 'kbar';
 import { IconSearch } from '@tabler/icons-react';
 import { Button } from './ui/button';
 
+/**
+ * SearchInput Component
+ * 
+ * A styled search button that triggers the global command palette (kbar) when clicked.
+ * Displays a search icon, placeholder text, and keyboard shortcut indicator.
+ * 
+ * Features:
+ * - Integrates with kbar for global search functionality
+ * - Responsive design with different widths on various screen sizes
+ * - Shows ⌘K keyboard shortcut hint on larger screens
+ * - Styled as a button but functions as a search trigger
+ * 
+ * @returns JSX element containing the search input button
+ * 
+ * @example
+ * ```tsx
+ * // Basic usage in a header or navigation
+ * <SearchInput />
+ * 
+ * // The component automatically integrates with kbar context
+ * // When clicked, opens the command palette for searching
+ * ```
+ * 
+ * @dependencies
+ * - `kbar` - For command palette functionality
+ * - `@tabler/icons-react` - For search icon
+ * - Local Button component from ui library
+ * 
+ * @styling
+ * - Responsive width: w-full → md:w-40 → lg:w-64
+ * - Keyboard shortcut badge only visible on sm+ screens
+ * - Uses muted colors for subtle appearance
+ */
 export default function SearchInput() {
   const { query } = useKBar();
   return (
