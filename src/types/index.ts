@@ -58,7 +58,7 @@ export interface ProcurementTicket {
   ticketId: string;
   title?: string;
   requester?: string;
-  department?: string;
+  requesterDepartment?: string;
   amount?: number;
   status: 'pending' | 'approved' | 'rejected' | 'completed' | 'in-progress';
   priority?: 'low' | 'medium' | 'high';
