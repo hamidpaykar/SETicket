@@ -210,7 +210,13 @@ export function TicketDetailModal({
                 <User className="h-4 w-4 text-muted-foreground" />
                 Sales Manager
               </div>
-              <p className="text-sm text-muted-foreground pl-6">{ticket.salesManager || ticket.requester}</p>
+              <p className="text-sm text-muted-foreground pl-6">
+                {ticket.salesManager
+                  ? ticket.salesManager
+                  : ticket.requester
+                    ? ticket.requester.fullName
+                    : "N/A"}
+              </p>
             </div>
 
             <div className="space-y-1">

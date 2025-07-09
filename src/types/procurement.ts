@@ -1,8 +1,10 @@
 export type TicketStatus =
+  | "New"
   | "pending"
   | "in-progress"
   | "approved"
   | "rejected"
+  | "declined"
   | "completed"
   | "closed"
 
@@ -35,13 +37,18 @@ export interface Comment {
 }
 
 export interface ProcurementTicket {
-  id: string;
+  id?: string;
   ticketId: string;
-  title: string;
+  title?: string;
   description: string;
-  requester: string;
-  department: string;
-  amount: number;
+  requester?: {
+    id: string;
+    fullName: string;
+    email: string;
+    profileImage?: string;
+  };
+  department?: string;
+  amount?: number;
   priority: 'low' | 'medium' | 'high';
   status: TicketStatus;
   createdDate: string;
@@ -99,10 +106,12 @@ export interface ProcurementTicket {
 
 export interface StatusCounts {
   all: number;
+  New: number;
   pending: number;
   'in-progress': number;
   approved: number;
   rejected: number;
+  declined: number;
   completed: number;
   closed: number;
   [key: string]: number;

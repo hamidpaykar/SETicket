@@ -44,7 +44,9 @@ export function FilteredTicketsView({
   const filteredTickets = useMemo(() => {
     let filtered = tickets
     if (filterByCurrentUser && user) {
-      filtered = tickets.filter((ticket) => ticket.requester.id === user.id)
+      filtered = tickets.filter(
+        (ticket) => ticket.requester && ticket.requester.id === user.id
+      )
     } else if (statuses) {
       filtered = tickets.filter((ticket) => statuses.includes(ticket.status))
     }
@@ -74,7 +76,7 @@ export function FilteredTicketsView({
   }
 
   const confirmDelete = () => {
-    if (ticketToDelete) {
+    if (ticketToDelete && ticketToDelete.id) {
       deleteTicket(ticketToDelete.id)
     }
     setShowDeleteModal(false)
@@ -85,6 +87,7 @@ export function FilteredTicketsView({
     ticket: ProcurementTicket,
     newStatus: TicketStatus
   ) => {
+    if (!ticket.id) return
     updateTicketStatus(ticket.id, newStatus)
     if (selectedTicket && selectedTicket.id === ticket.id) {
       setSelectedTicket({ ...selectedTicket, status: newStatus })
@@ -92,6 +95,7 @@ export function FilteredTicketsView({
   }
 
   const handleCommentAdd = (ticket: ProcurementTicket, comment: Comment) => {
+    if (!ticket.id) return
     addComment(ticket.id, comment)
     if (selectedTicket && selectedTicket.id === ticket.id) {
       setSelectedTicket({

@@ -84,7 +84,7 @@ export default function ProcurementPage() {
   }
 
   const confirmDelete = () => {
-    if (ticketToDelete) {
+    if (ticketToDelete && ticketToDelete.id) {
       deleteTicket(ticketToDelete.id)
     }
     setShowDeleteModal(false)
@@ -95,6 +95,7 @@ export default function ProcurementPage() {
     ticket: ProcurementTicket,
     newStatus: ProcurementTicket["status"]
   ) => {
+    if (!ticket.id) return;
     updateTicketStatus(ticket.id, newStatus)
     if (selectedTicket && selectedTicket.id === ticket.id) {
       setSelectedTicket({ ...selectedTicket, status: newStatus })
@@ -102,6 +103,7 @@ export default function ProcurementPage() {
   }
 
   const handleCommentAdd = (ticket: ProcurementTicket, comment: Comment) => {
+    if (!ticket.id) return;
     addComment(ticket.id, comment)
     if (selectedTicket && selectedTicket.id === ticket.id) {
       setSelectedTicket({

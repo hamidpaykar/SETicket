@@ -45,15 +45,17 @@ import {
   IconUserCircle,
   IconSettings,
   IconFileText,
-  IconBarChart3,
+  IconChartBar,
   IconUsers,
   IconShoppingCart,
   IconPackage,
   IconTruck,
   IconClock,
-  IconCheckCircle,
-  IconXCircle,
-  IconAlertCircle
+  IconCircleCheckFilled,
+  IconCircleXFilled,
+  IconAlertCircle,
+  IconBuilding,
+  IconCalendar
 } from '@tabler/icons-react';
 import { SignOutButton } from '@clerk/nextjs';
 import Link from 'next/link';
@@ -70,35 +72,26 @@ const getSecondaryNavItems = (pathname: string) => {
   if (pathname.startsWith('/dashboard/procurement')) {
     return [
       {
-        title: 'Overview',
+        title: 'Dashboard',
         url: '/dashboard/procurement',
-        icon: IconBarChart3,
-        description: 'Procurement dashboard'
+        icon: IconChartBar
       },
       {
-        title: 'New Request',
-        url: '/dashboard/procurement/new',
-        icon: IconShoppingCart,
-        description: 'Create new procurement'
+        title: 'Approved Requests',
+        url: '/dashboard/procurement/approved-requests',
+        icon: IconCircleCheckFilled
       },
       {
-        title: 'Active Requests',
-        url: '/dashboard/procurement/active',
+        title: 'Pending Requests',
+        url: '/dashboard/procurement/pending-requests',
         icon: IconClock,
         description: 'In-progress requests',
         badge: '3'
       },
       {
-        title: 'Approved',
-        url: '/dashboard/procurement/approved',
-        icon: IconCheckCircle,
-        description: 'Approved requests',
-        badge: '12'
-      },
-      {
         title: 'Rejected',
         url: '/dashboard/procurement/rejected',
-        icon: IconXCircle,
+        icon: IconCircleXFilled,
         description: 'Rejected requests'
       },
       {
@@ -151,13 +144,13 @@ const getSecondaryNavItems = (pathname: string) => {
       {
         title: 'Key Metrics',
         url: '/dashboard/main',
-        icon: IconBarChart3,
+        icon: IconChartBar,
         description: 'Dashboard overview'
       },
       {
         title: 'Analytics',
         url: '/dashboard/overview',
-        icon: IconBarChart3,
+        icon: IconChartBar,
         description: 'Detailed analytics'
       },
       {

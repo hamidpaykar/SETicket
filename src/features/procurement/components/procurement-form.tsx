@@ -182,7 +182,6 @@ export function ProcurementForm({ onCancel, onSave, onReset }: ProcurementFormPr
         ...formData,
         id: formData.ticketId || `PRO-${Date.now()}`,
         title: `${formData.customerName} - ${formData.department}` || "New Procurement Request",
-        requester: formData.salesManager || "Unknown",
         amount: materials.reduce((sum, m) => sum + (Number.parseFloat(m.salesPrice) || 0), 0),
         priority: "medium",
         createdDate: formData.date || new Date().toISOString().split("T")[0],

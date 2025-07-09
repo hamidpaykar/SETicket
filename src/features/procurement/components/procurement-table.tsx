@@ -47,7 +47,7 @@ export function ProcurementTable({ tickets, onTicketView, onTicketEdit, onTicket
                     <div className="text-sm text-muted-foreground truncate max-w-[200px]">{ticket.description ?? 'No description'}</div>
                   </div>
                 </TableCell>
-                <TableCell className="py-3">{ticket.requester}</TableCell>
+                <TableCell className="py-3">{ticket.requester?.fullName}</TableCell>
                 <TableCell className="py-3">{ticket.department}</TableCell>
                 <TableCell className="font-medium py-3">${ticket.amount?.toLocaleString() || "0"}</TableCell>
                 <TableCell className="py-3">{getStatusBadge(ticket.status)}</TableCell>

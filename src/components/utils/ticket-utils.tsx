@@ -10,6 +10,7 @@ import {
   IconClock,
   IconCircleXFilled,
   IconLock,
+  IconFile,
 } from "@tabler/icons-react"
 
 /**
@@ -28,16 +29,16 @@ export function filterTickets(
   }
 
   // Filter by search term
-  if (searchTerm.trim()) {
+  if (searchTerm) {
     const term = searchTerm.toLowerCase()
     filtered = filtered.filter(
       (ticket) =>
-        ticket.title.toLowerCase().includes(term) ||
-        ticket.description.toLowerCase().includes(term) ||
-        ticket.requester.toLowerCase().includes(term) ||
-        ticket.department.toLowerCase().includes(term) ||
-        ticket.id.toLowerCase().includes(term) ||
-        ticket.ticketId?.toLowerCase().includes(term)
+        (ticket.id && ticket.id.toLowerCase().includes(term)) ||
+        (ticket.title && ticket.title.toLowerCase().includes(term)) ||
+        (ticket.description && ticket.description.toLowerCase().includes(term)) ||
+        (ticket.requester?.fullName &&
+          ticket.requester.fullName.toLowerCase().includes(term)) ||
+        (ticket.department && ticket.department.toLowerCase().includes(term))
     )
   }
 
@@ -56,10 +57,12 @@ export function getStatusCounts(tickets: ProcurementTicket[]): StatusCounts {
     },
     {
       all: 0,
+      New: 0,
       pending: 0,
       "in-progress": 0,
       approved: 0,
       rejected: 0,
+      declined: 0,
       completed: 0,
       closed: 0,
     } as StatusCounts
@@ -73,6 +76,13 @@ export function getStatusCounts(tickets: ProcurementTicket[]): StatusCounts {
  */
 export function getStatusBadge(status: TicketStatus) {
   switch (status) {
+    case "New":
+      return (
+        <Badge variant="outline" className="text-muted-foreground font-normal">
+          <IconFile className="mr-1 h-3 w-3" style={{ color: "#60a5fa" }} />
+          New
+        </Badge>
+      )
     case "pending":
       return (
         <Badge variant="outline" className="text-muted-foreground font-normal">
@@ -94,21 +104,19 @@ export function getStatusBadge(status: TicketStatus) {
           Approved
         </Badge>
       )
+    case "rejected":
+    case "declined":
+      return (
+        <Badge variant="destructive" className="text-white">
+          <IconCircleXFilled className="mr-1 h-3 w-3" />
+          {status.charAt(0).toUpperCase() + status.slice(1)}
+        </Badge>
+      )
     case "completed":
       return (
         <Badge variant="outline" className="font-normal text-green-800 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/50 dark:border-green-800">
           <IconCircleCheckFilled className="mr-1 h-3 w-3" />
           Completed
-        </Badge>
-      )
-    case "rejected":
-      return (
-        <Badge
-          variant="outline"
-          className="font-normal text-muted-foreground"
-        >
-          <IconCircleXFilled className="mr-1 h-3 w-3 fill-red-500 dark:text-white" />
-          Rejected
         </Badge>
       )
     case "closed":
