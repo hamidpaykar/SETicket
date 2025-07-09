@@ -43,9 +43,9 @@ next-env.d.ts
 # cursor 
 .cursorrules
 /memory-bank
-
 # Sentry Config File
 .env.sentry-build-plugin
 
 # Mac
 .DS_Store
+

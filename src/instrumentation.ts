@@ -18,17 +18,16 @@ const sentryOptions: Sentry.NodeOptions | Sentry.EdgeOptions = {
 };
 
 export async function register() {
-  if (!process.env.NEXT_PUBLIC_SENTRY_DISABLED) {
-    if (process.env.NEXT_RUNTIME === 'nodejs') {
-      // Node.js Sentry configuration
-      Sentry.init(sentryOptions);
-    }
-
-    if (process.env.NEXT_RUNTIME === 'edge') {
-      // Edge Sentry configuration
-      Sentry.init(sentryOptions);
-    }
-  }
+  // if (!process.env.NEXT_PUBLIC_SENTRY_DISABLED) {
+  //   if (process.env.NEXT_RUNTIME === 'nodejs') {
+  //     // Node.js Sentry configuration
+  //     Sentry.init(sentryOptions);
+  //   }
+  //   if (process.env.NEXT_RUNTIME === 'edge') {
+  //     // Edge Sentry configuration
+  //     Sentry.init(sentryOptions);
+  //   }
+  // }
 }
 
-export const onRequestError = Sentry.captureRequestError;
+// export const onRequestError = Sentry.captureRequestError;
