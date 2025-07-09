@@ -15,11 +15,80 @@ export type Product = {
 export const navItems: NavItem[] = [
   {
     title: 'Dashboard',
-    url: '/dashboard/overview',
+    url: '/dashboard/main',
     icon: 'dashboard',
-    isActive: false,
+    isActive: true,
     shortcut: ['d', 'd'],
     items: [] // Empty array as there are no child items for Dashboard
+  },
+  {
+    title: 'Analytics',
+    url: '/dashboard/analytics',
+    icon: 'analytics',
+    isActive: false,
+    shortcut: ['a', 'a'],
+    items: [] // Empty array as there are no child items for Analytics
+  },
+  {
+    title: 'Procurement',
+    url: '/dashboard/procurement', // Direct link to procurement management
+    icon: 'billing',
+    isActive: false,
+    shortcut: ['r', 'r'],
+    items: [
+      {
+        title: 'All Tickets',
+        url: '/dashboard/procurement',
+        icon: 'billing'
+      },
+      {
+        title: 'New Request',
+        url: '/dashboard/procurement?view=create',
+        icon: 'add'
+      },
+      {
+        title: 'My Tickets',
+        url: '/dashboard/procurement/my-tickets',
+        icon: 'billing'
+      },
+      {
+        title: 'By Status',
+        url: '#', // Placeholder, this is a section title
+        icon: 'billing',
+        items: [
+          {
+            title: 'Pending Approval',
+            url: '/dashboard/procurement/pending-approval',
+            icon: 'billing'
+          },
+          {
+            title: 'In Progress',
+            url: '/dashboard/procurement/in-progress',
+            icon: 'billing'
+          },
+          {
+            title: 'Approved',
+            url: '/dashboard/procurement/approved',
+            icon: 'billing'
+          },
+          {
+            title: 'Completed',
+            url: '/dashboard/procurement/completed',
+            icon: 'billing'
+          },
+          {
+            title: 'Rejected',
+            url: '/dashboard/procurement/rejected',
+            icon: 'billing'
+          },
+          {
+            title: 'Closed',
+            url: '/dashboard/procurement/closed',
+            icon: 'billing'
+          }
+        ]
+      }
+    ]
   },
   {
     title: 'Product',
@@ -33,7 +102,7 @@ export const navItems: NavItem[] = [
     title: 'Account',
     url: '#', // Placeholder as there is no direct link for the parent
     icon: 'billing',
-    isActive: true,
+    isActive: false,
 
     items: [
       {
@@ -57,6 +126,38 @@ export const navItems: NavItem[] = [
     shortcut: ['k', 'k'],
     isActive: false,
     items: [] // No child items
+  },
+  {
+    title: 'Messages',
+    url: '#',
+    icon: 'message',
+    shortcut: ['m', 's'],
+    isActive: false,
+    items: []
+  },
+  {
+    title: 'Settings',
+    url: '#',
+    icon: 'settings',
+    shortcut: ['s', 't'],
+    isActive: false,
+    items: []
+  },
+  {
+    title: 'Help',
+    url: '#',
+    icon: 'help',
+    shortcut: ['h', 'p'],
+    isActive: false,
+    items: []
+  },
+  {
+    title: 'Projects',
+    url: '#',
+    icon: 'projects',
+    shortcut: ['p', 'j'],
+    isActive: false,
+    items: []
   }
 ];
 

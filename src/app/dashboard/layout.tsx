@@ -20,9 +20,13 @@ export default async function DashboardLayout({
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
   return (
     <KBar>
-      <SidebarProvider defaultOpen={defaultOpen}>
+      <SidebarProvider 
+        defaultOpen={defaultOpen} 
+        className="bg-background"
+        style={{ '--sidebar-width': '14rem' } as React.CSSProperties}
+      >
         <AppSidebar />
-        <SidebarInset>
+        <SidebarInset className="overflow-auto">
           <Header />
           {/* page main content */}
           {children}

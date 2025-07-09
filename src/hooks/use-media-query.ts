@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 export function useMediaQuery() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 768px)');

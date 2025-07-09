@@ -70,6 +70,16 @@ body {
   }
 }
 
+.theme-purple {
+  --primary: oklch(35.98% 0.207 319.46);
+  --primary-foreground: oklch(0.95 0.05 320);
+}
+
+.dark .theme-purple {
+  --primary: oklch(45% 0.22 319.46);
+    --primary-foreground: oklch(0.95 0.05 320);
+}
+
 .theme-mono,
 .theme-mono-scaled {
   --font-sans: var(--font-mono);

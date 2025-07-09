@@ -29,6 +29,10 @@ const DEFAULT_THEMES = [
   {
     name: 'Amber',
     value: 'amber'
+  },
+  {
+    name: 'Purple',
+    value: 'purple'
   }
 ];
 
@@ -40,6 +44,10 @@ const SCALED_THEMES = [
   {
     name: 'Blue',
     value: 'blue-scaled'
+  },
+  {
+    name: 'Purple',
+    value: 'purple-scaled'
   }
 ];
 

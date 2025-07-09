@@ -25,12 +25,14 @@ const ResultItem = React.forwardRef(
     return (
       <div
         ref={ref}
-        className={`relative z-10 flex cursor-pointer items-center justify-between px-4 py-3`}
+        className={`relative z-10 flex cursor-pointer items-center justify-between px-4 py-3 ${
+          active ? 'bg-accent/20' : ''
+        }`}
       >
         {active && (
           <div
             id='kbar-result-item'
-            className='border-primary bg-accent/50 absolute inset-0 z-[-1]! border-l-4'
+            className='bg-accent absolute inset-0 opacity-20'
           ></div>
         )}
         <div className='relative z-10 flex items-center gap-2'>
@@ -43,10 +45,10 @@ const ResultItem = React.forwardRef(
                     <span className='text-muted-foreground mr-2'>
                       {ancestor.name}
                     </span>
-                    <span className='mr-2'>&rsaquo;</span>
+                    <span className='text-muted-foreground mr-2'>&rsaquo;</span>
                   </React.Fragment>
                 ))}
-              <span>{action.name}</span>
+              <span className='text-foreground font-semibold text-base'>{action.name}</span>
             </div>
             {action.subtitle && (
               <span className='text-muted-foreground text-sm'>
