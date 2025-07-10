@@ -91,7 +91,6 @@ export interface ProcurementTicket {
   // Delivery Information
   company: string;
   attention: string;
-  department: string;
   roadNumber: string;
   postcode?: string;
   cityLand?: string;
