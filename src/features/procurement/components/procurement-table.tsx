@@ -16,7 +16,7 @@ interface ProcurementTableProps {
 
 export function ProcurementTable({ tickets, onTicketView, onTicketEdit, onTicketDelete }: ProcurementTableProps) {
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader className="bg-muted/50">
           <TableRow>
