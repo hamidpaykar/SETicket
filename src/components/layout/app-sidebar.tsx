@@ -39,7 +39,8 @@ import {
   IconCreditCard,
   IconLogout,
   IconUserCircle,
-  IconCommand
+  IconCommand,
+  IconX
 } from '@tabler/icons-react';
 import { SignOutButton } from '@clerk/nextjs';
 import Link from 'next/link';
@@ -48,12 +49,21 @@ import * as React from 'react';
 import { Icons } from '../icons'; 
 import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
+import { useSidebar } from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
 
 export default function AppSidebar() {
   const pathname = usePathname();
   const { isOpen } = useMediaQuery();
   const { user } = useUser();
   const router = useRouter();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   React.useEffect(() => {
     // Side effects based on sidebar state changes
@@ -62,7 +72,7 @@ export default function AppSidebar() {
   return (
     <Sidebar variant="inset" collapsible='offcanvas'>
       <SidebarHeader>
-        <div className='flex h-16 items-center justify-center py-3'>
+        <div className='flex h-16 items-center justify-between px-4'>
           <Image
             src='/images/siemens-energy-logo.png'
             alt='Siemens Energy'
@@ -71,6 +81,15 @@ export default function AppSidebar() {
             className='h-12 w-auto'
             priority
           />
+          {isMobile && (
+            <Button
+              variant='ghost'
+              size='icon'
+              onClick={handleLinkClick}
+            >
+              <IconX />
+            </Button>
+          )}
         </div>
       </SidebarHeader>
       <SidebarContent className='mt-4 overflow-x-hidden'>
@@ -115,7 +134,7 @@ export default function AppSidebar() {
                                     {subItem.items?.map((grandChild) => (
                                       <SidebarMenuSubItem key={grandChild.title}>
                                         <SidebarMenuSubButton asChild isActive={pathname === grandChild.url}>
-                                          <Link href={grandChild.url}>
+                                          <Link href={grandChild.url} onClick={handleLinkClick}>
                                             <span>{grandChild.title}</span>
                                           </Link>
                                         </SidebarMenuSubButton>
@@ -128,7 +147,7 @@ export default function AppSidebar() {
                           ) : (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton asChild isActive={pathname === subItem.url}>
-                                <Link href={subItem.url}>
+                                <Link href={subItem.url} onClick={handleLinkClick}>
                                   <span>{subItem.title}</span>
                                 </Link>
                               </SidebarMenuSubButton>
@@ -146,7 +165,7 @@ export default function AppSidebar() {
                     tooltip={item.title}
                     isActive={pathname === item.url}
                   >
-                    <Link href={item.url}>
+                    <Link href={item.url} onClick={handleLinkClick}>
                       <Icon />
                       <span>{item.title}</span>
                     </Link>
@@ -197,7 +216,10 @@ export default function AppSidebar() {
 
                 <DropdownMenuGroup>
                   <DropdownMenuItem
-                    onClick={() => router.push('/dashboard/profile')}
+                    onClick={() => {
+                      router.push('/dashboard/profile');
+                      handleLinkClick();
+                    }}
                   >
                     <IconUserCircle className='mr-2 h-4 w-4' />
                     Profile
