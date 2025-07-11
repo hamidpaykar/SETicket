@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,10 +10,23 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Plus, Trash2, Save, ArrowLeft, AlertCircle, RotateCcw } from "lucide-react"
+import { Plus, Trash2, Save, ArrowLeft, AlertCircle, RotateCcw, Upload, ClipboardCopy } from "lucide-react"
 import type { ProcurementTicket, MaterialItem } from "@/types/procurement"
 import { toast } from "sonner"
+import * as XLSX from "xlsx"
+import { motion, AnimatePresence } from "framer-motion"
 import { FileUpload } from "@/components/ui/file-upload"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface ProcurementFormProps {
   onCancel: () => void
@@ -53,6 +66,217 @@ export function ProcurementForm({ onCancel, onSave, onReset }: ProcurementFormPr
   const [showErrorAlert, setShowErrorAlert] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const excelFileRef = useRef<HTMLInputElement>(null)
+
+  const handleBulkCopy = async (columnKey: keyof MaterialItem) => {
+    if (materials.length === 0) {
+      toast.info("No materials available to copy.")
+      return
+    }
+
+    const columnDisplayNames: Record<string, string> = {
+      description: "Description",
+      materialNumber: "Material Number",
+      quantity: "Quantity",
+      currency: "Currency",
+      costPrice: "Cost Price",
+      salesPrice: "Sales Price",
+      vendor: "Vendor",
+    }
+
+    const values = materials.map((material) => material[columnKey])
+    const textToCopy = values.join("\n")
+    const displayName = columnDisplayNames[columnKey] || String(columnKey)
+
+    if (!textToCopy.trim()) {
+      toast.info(`Column "${displayName}" is empty.`)
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(textToCopy)
+      toast.success(`Copied "${displayName}" column to clipboard!`)
+    } catch (err) {
+      console.error("Failed to copy:", err)
+      toast.error("Could not copy to clipboard.")
+    }
+  }
+
+  const handleConfirmResetMaterials = () => {
+    setMaterials([
+      {
+        id: "1",
+        position: "A1",
+        description: "",
+        materialNumber: "",
+        quantity: "",
+        currency: "EUR",
+        costPrice: "",
+        salesCurrency: "EUR",
+        salesPrice: "",
+        vendor: "",
+        vendorNumber: "",
+        offerNumber: "",
+        requestedDeliveryDate: "",
+        confirmedDeliveryDate: "",
+        purchaseOrderNo: "",
+      },
+    ])
+    toast.success("Materials Reset", {
+      description: "The materials list has been reset.",
+    })
+  }
+
+  const handleExcelImportClick = () => {
+    excelFileRef.current?.click()
+  }
+
+  const handleExcelFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) {
+      return
+    }
+
+    const toastId = toast.loading("Importing materials from Excel file...")
+
+    try {
+      const materials = await new Promise<MaterialItem[]>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = (e: ProgressEvent<FileReader>) => {
+          try {
+            const data = e.target?.result
+            if (!data) {
+              return reject(new Error("Failed to read file data."))
+            }
+            const workbook = XLSX.read(data, { type: "array" })
+            const sheetName = workbook.SheetNames[0]
+            const worksheet = workbook.Sheets[sheetName]
+
+            // Validate headers
+            const expectedHeaders = [
+              "position",
+              "description",
+              "material number",
+              "quantity",
+              "currency",
+              "cost price",
+              "sales price",
+              "vendor",
+            ]
+            const headerRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, range: 0 })
+            if (headerRows.length === 0) {
+              return reject(new Error("The Excel file appears to be empty."))
+            }
+            const actualHeaders = (headerRows[0] as any[]).map((h) => String(h || "").trim().toLowerCase())
+
+            const areHeadersValid =
+              expectedHeaders.length === actualHeaders.length &&
+              expectedHeaders.every((expectedHeader, i) => expectedHeader === actualHeaders[i])
+
+            if (!areHeadersValid) {
+              const missing = expectedHeaders.filter((h) => !actualHeaders.includes(h))
+              const extra = actualHeaders.filter((h) => !expectedHeaders.includes(h))
+              const errorParts = []
+              if (missing.length > 0) {
+                errorParts.push(`Missing: ${missing.join(", ")}`)
+              }
+              if (extra.length > 0) {
+                errorParts.push(`Extra: ${extra.join(", ")}`)
+              }
+              let finalMessage = "Invalid Excel format. Check column order."
+              if (errorParts.length > 0) {
+                finalMessage = errorParts.join(". ")
+              }
+              return reject(new Error(finalMessage))
+            }
+
+            const jsonData = XLSX.utils.sheet_to_json<any>(worksheet, {
+              header: [
+                "position",
+                "description",
+                "materialNumber",
+                "quantity",
+                "currency",
+                "costPrice",
+                "salesPrice",
+                "vendor",
+              ],
+              range: 1, // Skip header row
+            })
+
+            const filteredData = jsonData.filter(
+              (row) =>
+                row.description ||
+                row.materialNumber ||
+                row.quantity ||
+                row.currency ||
+                row.costPrice ||
+                row.salesPrice ||
+                row.vendor
+            )
+
+            if (filteredData.length === 0) {
+              return reject(new Error("No data found in the Excel file. Please ensure it is formatted correctly."))
+            }
+
+            let processedData = filteredData
+            if (filteredData.length > 30) {
+              toast.warning("Import Limit Reached", {
+                description: "The Excel file contains more than 30 items. Only the first 30 have been imported.",
+              })
+              processedData = filteredData.slice(0, 30)
+            }
+
+            const newMaterials: MaterialItem[] = processedData.map((row, index) => ({
+              id: `${Date.now()}-${index}`,
+              position: `A${index + 1}`,
+              description: row.description?.toString() ?? "",
+              materialNumber: row.materialNumber?.toString() ?? "",
+              quantity: row.quantity?.toString() ?? "",
+              currency: row.currency?.toString() ?? "EUR",
+              costPrice: row.costPrice?.toString() ?? "",
+              salesPrice: row.salesPrice?.toString() ?? "",
+              vendor: row.vendor?.toString() ?? "",
+              salesCurrency: "EUR", // Default value
+              vendorNumber: "", // Default value
+              offerNumber: "", // Default value
+              requestedDeliveryDate: "", // Default value
+              confirmedDeliveryDate: "", // Default value
+              purchaseOrderNo: "", // Default value
+            }))
+
+            resolve(newMaterials)
+          } catch (error) {
+            reject(error instanceof Error ? error : new Error("An unknown error occurred during file processing."))
+          }
+        }
+
+        reader.onerror = (error) => {
+          console.error("File reading error:", error)
+          reject(new Error("Failed to read the file."))
+        }
+
+        reader.readAsArrayBuffer(file)
+      })
+
+      setMaterials(materials)
+
+      toast.success(`Successfully imported ${materials.length} material items.`, {
+        id: toastId,
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "An unknown error occurred."
+      toast.error(message, {
+        id: toastId,
+        duration: 8000,
+      })
+    }
+
+    // Reset file input to allow re-uploading the same file
+    if (event.target) {
+      event.target.value = ""
+    }
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -80,7 +304,13 @@ export function ProcurementForm({ onCancel, onSave, onReset }: ProcurementFormPr
   }
 
   const removeMaterial = (id: string) => {
-    setMaterials(materials.filter((m) => m.id !== id))
+    const updatedMaterials = materials
+      .filter((m) => m.id !== id)
+      .map((material, index) => ({
+        ...material,
+        position: `A${index + 1}`,
+      }))
+    setMaterials(updatedMaterials)
   }
 
   const updateMaterial = (id: string, field: string, value: string) => {
@@ -681,15 +911,63 @@ export function ProcurementForm({ onCancel, onSave, onReset }: ProcurementFormPr
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <Button
-                  type="button"
-                  onClick={addMaterial}
-                  disabled={isSubmitting}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 flex items-center gap-2 w-full sm:w-auto"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Material
-                </Button>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Button
+                    type="button"
+                    onClick={addMaterial}
+                    disabled={isSubmitting}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 flex items-center gap-2 w-full sm:w-auto"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Material
+                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      onClick={handleExcelImportClick}
+                      disabled={isSubmitting}
+                      className="bg-gray-900 hover:bg-gray-800 text-white flex items-center gap-2 w-full sm:w-auto"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Import from Excel
+                    </Button>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={isSubmitting}
+                          className="text-destructive border-destructive hover:bg-destructive/10 flex items-center gap-2 w-full sm:w-auto"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                          Reset Materials
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will clear all material entries and reset to one empty row. This action cannot be
+                            undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleConfirmResetMaterials}>Continue</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+
+                    <input
+                      type="file"
+                      ref={excelFileRef}
+                      onChange={handleExcelFileChange}
+                      className="hidden"
+                      accept=".xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                    />
+                  </div>
+                </div>
 
                 {/* Desktop table view */}
                 <div className="overflow-x-auto hidden md:block">
@@ -697,243 +975,349 @@ export function ProcurementForm({ onCancel, onSave, onReset }: ProcurementFormPr
                     <TableHeader>
                       <TableRow className="border-border">
                         <TableHead className="text-foreground">Pos.</TableHead>
-                        <TableHead className="text-foreground">Description</TableHead>
-                        <TableHead className="text-foreground">Material Number</TableHead>
-                        <TableHead className="text-foreground">Quantity</TableHead>
-                        <TableHead className="text-foreground">Currency</TableHead>
-                        <TableHead className="text-foreground">Cost Price</TableHead>
-                        <TableHead className="text-foreground">Sales Price</TableHead>
-                        <TableHead className="text-foreground">Vendor</TableHead>
-                        <TableHead className="text-foreground">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {materials.map((material, index) => (
-                        <TableRow
-                          key={material.id}
-                          className="border-border animate-in slide-in-from-left-4 duration-300"
-                          style={{ animationDelay: `${index * 50}ms` }}
-                        >
-                          <TableCell className="text-foreground">{material.position}</TableCell>
-                          <TableCell>
-                            <Input
-                              value={material.description}
-                              onChange={(e) => updateMaterial(material.id, "description", e.target.value)}
-                              placeholder="Material description"
-                              disabled={isSubmitting}
-                              className="bg-background border-border text-foreground"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              value={material.materialNumber}
-                              onChange={(e) => updateMaterial(material.id, "materialNumber", e.target.value)}
-                              placeholder="Material number"
-                              disabled={isSubmitting}
-                              className="bg-background border-border text-foreground"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              value={material.quantity}
-                              onChange={(e) => updateMaterial(material.id, "quantity", e.target.value)}
-                              placeholder="Qty"
-                              disabled={isSubmitting}
-                              className="bg-background border-border text-foreground"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Select
-                              value={material.currency}
-                              onValueChange={(value) => updateMaterial(material.id, "currency", value)}
-                              disabled={isSubmitting}
-                            >
-                              <SelectTrigger className="bg-background border-border text-foreground">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="EUR">EUR</SelectItem>
-                                <SelectItem value="USD">USD</SelectItem>
-                                <SelectItem value="DKK">DKK</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              value={material.costPrice}
-                              onChange={(e) => updateMaterial(material.id, "costPrice", e.target.value)}
-                              placeholder="Cost price"
-                              disabled={isSubmitting}
-                              className="bg-background border-border text-foreground"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              value={material.salesPrice}
-                              onChange={(e) => updateMaterial(material.id, "salesPrice", e.target.value)}
-                              placeholder="Sales price"
-                              disabled={isSubmitting}
-                              className="bg-background border-border text-foreground"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              value={material.vendor}
-                              onChange={(e) => updateMaterial(material.id, "vendor", e.target.value)}
-                              placeholder="Vendor"
-                              disabled={isSubmitting}
-                              className="bg-background border-border text-foreground"
-                            />
-                          </TableCell>
-                          <TableCell>
+                        <TableHead className="text-foreground">
+                          <div className="flex items-center gap-1">
+                            Description
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
-                              onClick={() => removeMaterial(material.id)}
-                              disabled={materials.length === 1 || isSubmitting}
-                              className="hover:bg-destructive/10 hover:text-destructive"
+                              className="h-6 w-6 p-0"
+                              onClick={() => handleBulkCopy("description")}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <ClipboardCopy className="h-3.5 w-3.5" />
                             </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-foreground">
+                          <div className="flex items-center gap-1">
+                            Material Number
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => handleBulkCopy("materialNumber")}
+                            >
+                              <ClipboardCopy className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-foreground">
+                          <div className="flex items-center gap-1">
+                            Quantity
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => handleBulkCopy("quantity")}
+                            >
+                              <ClipboardCopy className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-foreground">
+                          <div className="flex items-center gap-1">
+                            Currency
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => handleBulkCopy("currency")}
+                            >
+                              <ClipboardCopy className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-foreground">
+                          <div className="flex items-center gap-1">
+                            Cost Price
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => handleBulkCopy("costPrice")}
+                            >
+                              <ClipboardCopy className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-foreground">
+                          <div className="flex items-center gap-1">
+                            Sales Price
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => handleBulkCopy("salesPrice")}
+                            >
+                              <ClipboardCopy className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-foreground">
+                          <div className="flex items-center gap-1">
+                            Vendor
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => handleBulkCopy("vendor")}
+                            >
+                              <ClipboardCopy className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-foreground">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <AnimatePresence>
+                        {materials.map((material) => (
+                          <motion.tr
+                            key={material.id}
+                            layout
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className="border-border"
+                          >
+                            <TableCell className="text-foreground">{material.position}</TableCell>
+                            <TableCell>
+                              <Input
+                                value={material.description}
+                                onChange={(e) => updateMaterial(material.id, "description", e.target.value)}
+                                placeholder="Material description"
+                                disabled={isSubmitting}
+                                className="bg-background border-border text-foreground"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                value={material.materialNumber}
+                                onChange={(e) => updateMaterial(material.id, "materialNumber", e.target.value)}
+                                placeholder="Material number"
+                                disabled={isSubmitting}
+                                className="bg-background border-border text-foreground"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                value={material.quantity}
+                                onChange={(e) => updateMaterial(material.id, "quantity", e.target.value)}
+                                placeholder="Qty"
+                                disabled={isSubmitting}
+                                className="bg-background border-border text-foreground"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Select
+                                value={material.currency}
+                                onValueChange={(value) => updateMaterial(material.id, "currency", value)}
+                                disabled={isSubmitting}
+                              >
+                                <SelectTrigger className="bg-background border-border text-foreground">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="EUR">EUR</SelectItem>
+                                  <SelectItem value="USD">USD</SelectItem>
+                                  <SelectItem value="DKK">DKK</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                value={material.costPrice}
+                                onChange={(e) => updateMaterial(material.id, "costPrice", e.target.value)}
+                                placeholder="Cost price"
+                                disabled={isSubmitting}
+                                className="bg-background border-border text-foreground"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                value={material.salesPrice}
+                                onChange={(e) => updateMaterial(material.id, "salesPrice", e.target.value)}
+                                placeholder="Sales price"
+                                disabled={isSubmitting}
+                                className="bg-background border-border text-foreground"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                value={material.vendor}
+                                onChange={(e) => updateMaterial(material.id, "vendor", e.target.value)}
+                                placeholder="Vendor"
+                                disabled={isSubmitting}
+                                className="bg-background border-border text-foreground"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeMaterial(material.id)}
+                                disabled={materials.length === 1 || isSubmitting}
+                                className="hover:bg-destructive/10 hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
                     </TableBody>
                   </Table>
                 </div>
 
                 {/* Mobile card view */}
                 <div className="grid grid-cols-1 gap-4 md:hidden">
-                  {materials.map((material, index) => (
-                    <Card
-                      key={material.id}
-                      className="border-border bg-card/50 animate-in slide-in-from-left-4 duration-300"
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      <CardHeader>
-                        <div className="flex justify-between items-center">
-                          <CardTitle className="text-foreground">Material {index + 1}</CardTitle>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeMaterial(material.id)}
-                            disabled={materials.length === 1 || isSubmitting}
-                            className="hover:bg-destructive/10 hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor={`desc-${material.id}`} className="text-foreground text-sm font-medium">
-                            Description
-                          </Label>
-                          <Input
-                            id={`desc-${material.id}`}
-                            value={material.description}
-                            onChange={(e) => updateMaterial(material.id, "description", e.target.value)}
-                            placeholder="Material description"
-                            disabled={isSubmitting}
-                            className="bg-background border-border text-foreground"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor={`mat-num-${material.id}`} className="text-foreground text-sm font-medium">
-                            Material Number
-                          </Label>
-                          <Input
-                            id={`mat-num-${material.id}`}
-                            value={material.materialNumber}
-                            onChange={(e) => updateMaterial(material.id, "materialNumber", e.target.value)}
-                            placeholder="Material number"
-                            disabled={isSubmitting}
-                            className="bg-background border-border text-foreground"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor={`qty-${material.id}`} className="text-foreground text-sm font-medium">
-                              Quantity
-                            </Label>
-                            <Input
-                              id={`qty-${material.id}`}
-                              value={material.quantity}
-                              onChange={(e) => updateMaterial(material.id, "quantity", e.target.value)}
-                              placeholder="Qty"
-                              disabled={isSubmitting}
-                              className="bg-background border-border text-foreground"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`currency-${material.id}`} className="text-foreground text-sm font-medium">
-                              Currency
-                            </Label>
-                            <Select
-                              value={material.currency}
-                              onValueChange={(value) => updateMaterial(material.id, "currency", value)}
-                              disabled={isSubmitting}
-                            >
-                              <SelectTrigger
-                                id={`currency-${material.id}`}
-                                className="bg-background border-border text-foreground"
+                  <AnimatePresence>
+                    {materials.map((material, index) => (
+                      <motion.div
+                        key={material.id}
+                        layout
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      >
+                        <Card
+                          className="border-border bg-card/50"
+                        >
+                          <CardHeader>
+                            <div className="flex justify-between items-center">
+                              <CardTitle className="text-foreground">Material {index + 1}</CardTitle>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeMaterial(material.id)}
+                                disabled={materials.length === 1 || isSubmitting}
+                                className="hover:bg-destructive/10 hover:text-destructive"
                               >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="EUR">EUR</SelectItem>
-                                <SelectItem value="USD">USD</SelectItem>
-                                <SelectItem value="DKK">DKK</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor={`cost-${material.id}`} className="text-foreground text-sm font-medium">
-                              Cost Price
-                            </Label>
-                            <Input
-                              id={`cost-${material.id}`}
-                              value={material.costPrice}
-                              onChange={(e) => updateMaterial(material.id, "costPrice", e.target.value)}
-                              placeholder="Cost price"
-                              disabled={isSubmitting}
-                              className="bg-background border-border text-foreground"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`sales-${material.id}`} className="text-foreground text-sm font-medium">
-                              Sales Price
-                            </Label>
-                            <Input
-                              id={`sales-${material.id}`}
-                              value={material.salesPrice}
-                              onChange={(e) => updateMaterial(material.id, "salesPrice", e.target.value)}
-                              placeholder="Sales price"
-                              disabled={isSubmitting}
-                              className="bg-background border-border text-foreground"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor={`vendor-${material.id}`} className="text-foreground text-sm font-medium">
-                            Vendor
-                          </Label>
-                          <Input
-                            id={`vendor-${material.id}`}
-                            value={material.vendor}
-                            onChange={(e) => updateMaterial(material.id, "vendor", e.target.value)}
-                            placeholder="Vendor"
-                            disabled={isSubmitting}
-                            className="bg-background border-border text-foreground"
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor={`desc-${material.id}`} className="text-foreground text-sm font-medium">
+                                Description
+                              </Label>
+                              <Input
+                                id={`desc-${material.id}`}
+                                value={material.description}
+                                onChange={(e) => updateMaterial(material.id, "description", e.target.value)}
+                                placeholder="Material description"
+                                disabled={isSubmitting}
+                                className="bg-background border-border text-foreground"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`mat-num-${material.id}`} className="text-foreground text-sm font-medium">
+                                Material Number
+                              </Label>
+                              <Input
+                                id={`mat-num-${material.id}`}
+                                value={material.materialNumber}
+                                onChange={(e) => updateMaterial(material.id, "materialNumber", e.target.value)}
+                                placeholder="Material number"
+                                disabled={isSubmitting}
+                                className="bg-background border-border text-foreground"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`qty-${material.id}`} className="text-foreground text-sm font-medium">
+                                  Quantity
+                                </Label>
+                                <Input
+                                  id={`qty-${material.id}`}
+                                  value={material.quantity}
+                                  onChange={(e) => updateMaterial(material.id, "quantity", e.target.value)}
+                                  placeholder="Qty"
+                                  disabled={isSubmitting}
+                                  className="bg-background border-border text-foreground"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`currency-${material.id}`} className="text-foreground text-sm font-medium">
+                                  Currency
+                                </Label>
+                                <Select
+                                  value={material.currency}
+                                  onValueChange={(value) => updateMaterial(material.id, "currency", value)}
+                                  disabled={isSubmitting}
+                                >
+                                  <SelectTrigger
+                                    id={`currency-${material.id}`}
+                                    className="bg-background border-border text-foreground"
+                                  >
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="EUR">EUR</SelectItem>
+                                    <SelectItem value="USD">USD</SelectItem>
+                                    <SelectItem value="DKK">DKK</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`cost-${material.id}`} className="text-foreground text-sm font-medium">
+                                  Cost Price
+                                </Label>
+                                <Input
+                                  id={`cost-${material.id}`}
+                                  value={material.costPrice}
+                                  onChange={(e) => updateMaterial(material.id, "costPrice", e.target.value)}
+                                  placeholder="Cost price"
+                                  disabled={isSubmitting}
+                                  className="bg-background border-border text-foreground"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor={`sales-${material.id}`} className="text-foreground text-sm font-medium">
+                                  Sales Price
+                                </Label>
+                                <Input
+                                  id={`sales-${material.id}`}
+                                  value={material.salesPrice}
+                                  onChange={(e) => updateMaterial(material.id, "salesPrice", e.target.value)}
+                                  placeholder="Sales price"
+                                  disabled={isSubmitting}
+                                  className="bg-background border-border text-foreground"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor={`vendor-${material.id}`} className="text-foreground text-sm font-medium">
+                                Vendor
+                              </Label>
+                              <Input
+                                id={`vendor-${material.id}`}
+                                value={material.vendor}
+                                onChange={(e) => updateMaterial(material.id, "vendor", e.target.value)}
+                                placeholder="Vendor"
+                                disabled={isSubmitting}
+                                className="bg-background border-border text-foreground"
+                              />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </div>
               </div>
             </CardContent>
