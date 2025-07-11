@@ -10,11 +10,10 @@ import { getStatusBadge } from "@/components/utils/ticket-utils"
 interface ProcurementTableProps {
   tickets: ProcurementTicket[]
   onTicketView?: (ticket: ProcurementTicket) => void
-  onTicketEdit?: (ticket: ProcurementTicket) => void
   onTicketDelete?: (ticket: ProcurementTicket) => void
 }
 
-export function ProcurementTable({ tickets, onTicketView, onTicketEdit, onTicketDelete }: ProcurementTableProps) {
+export function ProcurementTable({ tickets, onTicketView, onTicketDelete }: ProcurementTableProps) {
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table>
@@ -39,7 +38,11 @@ export function ProcurementTable({ tickets, onTicketView, onTicketEdit, onTicket
             </TableRow>
           ) : (
             tickets.map((ticket) => (
-              <TableRow key={ticket.id} className="hover:bg-muted/50">
+              <TableRow
+                key={ticket.id}
+                className="hover:bg-muted/50 cursor-pointer"
+                onClick={() => onTicketView && onTicketView(ticket)}
+              >
                 <TableCell className="font-medium py-3">{ticket.id}</TableCell>
                 <TableCell className="py-3">
                   <div>
@@ -54,7 +57,7 @@ export function ProcurementTable({ tickets, onTicketView, onTicketEdit, onTicket
                 <TableCell className="text-sm text-muted-foreground py-3">
                   {ticket.createdDate ? new Date(ticket.createdDate).toLocaleDateString() : 'N/A'}
                 </TableCell>
-                <TableCell className="py-3">
+                <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">
@@ -67,12 +70,6 @@ export function ProcurementTable({ tickets, onTicketView, onTicketEdit, onTicket
                         <DropdownMenuItem onClick={() => onTicketView(ticket)}>
                           <Eye className="mr-2 h-4 w-4" />
                           View Details
-                        </DropdownMenuItem>
-                      )}
-                      {onTicketEdit && (
-                        <DropdownMenuItem onClick={() => onTicketEdit(ticket)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit Ticket
                         </DropdownMenuItem>
                       )}
                       {onTicketDelete && (

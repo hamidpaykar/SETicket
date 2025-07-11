@@ -42,8 +42,8 @@ export const navItems: NavItem[] = [
         icon: 'billing'
       },
       {
-        title: 'New Request',
-        url: '/dashboard/procurement?view=create',
+        title: 'New Ticket',
+        url: '/dashboard/procurement/new',
         icon: 'add'
       },
       {

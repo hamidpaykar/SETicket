@@ -102,7 +102,7 @@ export const FileUpload = ({
           className="hidden"
           accept="image/jpeg,image/png,application/pdf,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         />
-        <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]">
+        <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,white,transparent)] overflow-hidden">
           <GridPattern />
         </div>
         <div className="flex flex-col items-center justify-center">

@@ -25,7 +25,7 @@ export function ProcurementForm({ onCancel, onSave, onReset }: ProcurementFormPr
   const [formData, setFormData] = useState<Partial<ProcurementTicket>>({
     ticketId: `PRO-${Date.now()}`,
     status: "pending",
-    date: new Date().toISOString().split("T")[0],
+    date: new Date().toLocaleDateString("en-GB"),
     materials: [],
   })
 
@@ -105,7 +105,7 @@ export function ProcurementForm({ onCancel, onSave, onReset }: ProcurementFormPr
     setFormData({
       ticketId: `PRO-${Date.now()}`,
       status: "pending",
-      date: new Date().toISOString().split("T")[0],
+      date: new Date().toLocaleDateString("en-GB"),
       materials: [],
     })
     setMaterials([
@@ -344,24 +344,11 @@ export function ProcurementForm({ onCancel, onSave, onReset }: ProcurementFormPr
                 </Label>
                 <Input
                   id="date"
-                  type="date"
+                  type="text"
                   value={formData.date || ""}
                   onChange={(e) => handleInputChange("date", e.target.value)}
                   required
-                  disabled={isSubmitting}
-                  className="bg-background border-border text-foreground"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="euTaxonomy" className="text-foreground text-sm font-medium">
-                  EU-Taxonomy Code
-                </Label>
-                <Input
-                  id="euTaxonomy"
-                  value={formData.euTaxonomy || ""}
-                  onChange={(e) => handleInputChange("euTaxonomy", e.target.value)}
-                  disabled={isSubmitting}
+                  disabled
                   className="bg-background border-border text-foreground"
                 />
               </div>
@@ -516,6 +503,18 @@ export function ProcurementForm({ onCancel, onSave, onReset }: ProcurementFormPr
                   value={formData.prodHierarchy || ""}
                   onChange={(e) => handleInputChange("prodHierarchy", e.target.value)}
                   required
+                  disabled={isSubmitting}
+                  className="bg-background border-border text-foreground"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="euTaxonomy" className="text-foreground text-sm font-medium">
+                  EU-Taxonomy Code
+                </Label>
+                <Input
+                  id="euTaxonomy"
+                  value={formData.euTaxonomy || ""}
+                  onChange={(e) => handleInputChange("euTaxonomy", e.target.value)}
                   disabled={isSubmitting}
                   className="bg-background border-border text-foreground"
                 />

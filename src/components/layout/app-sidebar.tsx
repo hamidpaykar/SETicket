@@ -112,7 +112,7 @@ export default function AppSidebar() {
                         isActive={pathname === item.url}
                       >
                         {item.icon && <Icon />}
-                        <span>{item.title}</span>
+                        <span className="text-sm">{item.title}</span>
                         <IconChevronRight className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
                       </SidebarMenuButton>
                     </CollapsibleTrigger>
@@ -124,8 +124,8 @@ export default function AppSidebar() {
                             <Collapsible key={subItem.title} asChild>
                               <SidebarMenuSubItem>
                                 <CollapsibleTrigger asChild>
-                                  <SidebarMenuSubButton>
-                                    <span>{subItem.title}</span>
+                                  <SidebarMenuSubButton>x1
+                                    <span className="text-sm">{subItem.title}</span>
                                     <IconChevronRight className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
                                   </SidebarMenuSubButton>
                                 </CollapsibleTrigger>
@@ -135,7 +135,7 @@ export default function AppSidebar() {
                                       <SidebarMenuSubItem key={grandChild.title}>
                                         <SidebarMenuSubButton asChild isActive={pathname === grandChild.url}>
                                           <Link href={grandChild.url} onClick={handleLinkClick}>
-                                            <span>{grandChild.title}</span>
+                                            <span className="text-sm">{grandChild.title}</span>
                                           </Link>
                                         </SidebarMenuSubButton>
                                       </SidebarMenuSubItem>
@@ -148,7 +148,7 @@ export default function AppSidebar() {
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton asChild isActive={pathname === subItem.url}>
                                 <Link href={subItem.url} onClick={handleLinkClick}>
-                                  <span>{subItem.title}</span>
+                                  <span className="text-sm">{subItem.title}</span>
                                 </Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
@@ -167,7 +167,7 @@ export default function AppSidebar() {
                   >
                     <Link href={item.url} onClick={handleLinkClick}>
                       <Icon />
-                      <span>{item.title}</span>
+                      <span className="text-sm">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

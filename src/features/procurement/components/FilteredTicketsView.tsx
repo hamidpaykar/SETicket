@@ -64,11 +64,6 @@ export function FilteredTicketsView({
     setShowDetailModal(true)
   }
 
-  const handleTicketEdit = (ticket: ProcurementTicket) => {
-    // This should ideally route to the edit page
-    toast.info(`Editing ticket ${ticket.id}`)
-  }
-
   const handleTicketDelete = (ticket: ProcurementTicket) => {
     setTicketToDelete(ticket)
     setShowDeleteModal(true)
@@ -117,7 +112,6 @@ export function FilteredTicketsView({
           <ProcurementTable
             tickets={paginatedTickets}
             onTicketView={handleTicketView}
-            onTicketEdit={handleTicketEdit}
             onTicketDelete={handleTicketDelete}
           />
           <TablePagination
@@ -134,7 +128,6 @@ export function FilteredTicketsView({
         ticket={selectedTicket}
         open={showDetailModal}
         onOpenChange={setShowDetailModal}
-        onEdit={handleTicketEdit}
         onDelete={handleTicketDelete}
         onStatusChange={handleStatusChange}
         onCommentAdd={handleCommentAdd}

@@ -1,58 +1,48 @@
-// NOTE: This component has been replaced with direct page navigation
-// The procurement form now opens in a dedicated page at /dashboard/procurement/new
-// instead of in a dialog/modal popup
+"use client"
 
-/*
-'use client';
-
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog';
-import { Plus } from 'lucide-react';
-import { ProcurementForm } from '@/components/ui/procurement-form';
+  DialogTrigger,
+  DialogContent,
+} from "@/components/ui/dialog"
+import { ProcurementForm } from "@/features/procurement/components/procurement-form"
+import { Plus } from "lucide-react"
+import { useState } from "react"
 
 interface NewProcurementDialogProps {
-  trigger?: React.ReactNode;
+  trigger?: React.ReactNode
 }
 
 export default function NewProcurementDialog({ trigger }: NewProcurementDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   const handleCancel = () => {
-    setOpen(false);
-  };
+    setOpen(false)
+  }
 
   const defaultTrigger = (
     <Button>
-      <Plus className='mr-2 h-4 w-4' />
-      New Request
+      <Plus className="mr-2 h-4 w-4" />
+      New Ticket
     </Button>
-  );
+  )
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || defaultTrigger}
-      </DialogTrigger>
-      <DialogContent className='max-w-[95vw] max-h-[95vh] overflow-y-auto p-0 w-full'>
-        <DialogHeader className='px-6 pt-6 pb-2'>
-          <DialogTitle className='text-2xl font-bold'>Create New Procurement Request</DialogTitle>
-          <DialogDescription>
-            Fill out the form below to create a new procurement ticket. All required fields must be completed.
-          </DialogDescription>
+      <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
+      <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto p-0 w-full">
+        <DialogHeader className="p-6 pb-0">
+          <DialogTitle>Create New Procurement Ticket</DialogTitle>
+          <DialogDescription>Fill out the form to create a new ticket.</DialogDescription>
         </DialogHeader>
-        <div className='px-6 pb-6'>
+        <div className="px-6 pb-6">
           <ProcurementForm onCancel={handleCancel} />
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-*/ 
+  )
+} 
