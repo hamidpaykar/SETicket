@@ -16,6 +16,7 @@ interface ProcurementOverviewProps {
   tickets?: ProcurementTicket[]
   onNewTicket?: () => void
   onTicketView?: (ticket: ProcurementTicket) => void
+  onTicketEdit?: (ticket: ProcurementTicket) => void
   onTicketDelete?: (ticket: ProcurementTicket) => void
   onStatusChange?: (ticket: ProcurementTicket, newStatus: TicketStatus) => void
 }
@@ -24,6 +25,7 @@ export function ProcurementOverview({
   tickets = mockTickets,
   onNewTicket,
   onTicketView,
+  onTicketEdit,
   onTicketDelete,
   onStatusChange,
 }: ProcurementOverviewProps) {
@@ -58,6 +60,15 @@ export function ProcurementOverview({
       onTicketView(ticket)
       toast.info("Ticket Details", {
         description: `Opening details for ticket ${ticket.id}.`,
+      })
+    }
+  }
+
+  const handleTicketEdit = (ticket: ProcurementTicket) => {
+    if (onTicketEdit) {
+      onTicketEdit(ticket)
+      toast.info("Editing Ticket", {
+        description: `Editing ticket ${ticket.id}.`,
       })
     }
   }
@@ -99,6 +110,7 @@ export function ProcurementOverview({
           <ProcurementTable
             tickets={paginatedTickets}
             onTicketView={handleTicketView}
+            onTicketEdit={handleTicketEdit}
             onTicketDelete={handleTicketDelete}
           />
           <TablePagination

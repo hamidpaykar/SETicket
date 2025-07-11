@@ -10,10 +10,29 @@ import { getStatusBadge } from "@/components/utils/ticket-utils"
 interface ProcurementTableProps {
   tickets: ProcurementTicket[]
   onTicketView?: (ticket: ProcurementTicket) => void
+  onTicketEdit?: (ticket: ProcurementTicket) => void
   onTicketDelete?: (ticket: ProcurementTicket) => void
 }
 
-export function ProcurementTable({ tickets, onTicketView, onTicketDelete }: ProcurementTableProps) {
+export function ProcurementTable({ tickets, onTicketView, onTicketEdit, onTicketDelete }: ProcurementTableProps) {
+  const handleViewClick = (ticket: ProcurementTicket) => {
+    if (onTicketView) {
+      onTicketView(ticket)
+    }
+  }
+
+  const handleEditClick = (ticket: ProcurementTicket) => {
+    if (onTicketEdit) {
+      onTicketEdit(ticket)
+    }
+  }
+
+  const handleDeleteClick = (ticket: ProcurementTicket) => {
+    if (onTicketDelete) {
+      onTicketDelete(ticket)
+    }
+  }
+
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table>
@@ -66,21 +85,15 @@ export function ProcurementTable({ tickets, onTicketView, onTicketDelete }: Proc
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {onTicketView && (
-                        <DropdownMenuItem onClick={() => onTicketView(ticket)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                      )}
-                      {onTicketDelete && (
-                        <DropdownMenuItem
-                          onClick={() => onTicketDelete(ticket)}
-                          className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete Ticket
-                        </DropdownMenuItem>
-                      )}
+                      <DropdownMenuItem onClick={() => handleViewClick(ticket)}>
+                        <Eye className="mr-2 h-4 w-4" /> View
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEditClick(ticket)}>
+                        <Edit className="mr-2 h-4 w-4" /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteClick(ticket)}>
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
