@@ -421,7 +421,7 @@ export function ProcurementForm({ onCancel, onSave, onReset }: ProcurementFormPr
           {/* Sales Information */}
           <Card className="border-border bg-card animate-in slide-in-from-bottom-4 duration-700 delay-300">
             <CardHeader>
-              <CardTitle className="text-foreground">Sales Information</CardTitle>
+              <CardTitle className="text-foreground">Siemens Energy A/S Information</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:gap-6 sm:grid-cols-2">
               <div className="space-y-2">
