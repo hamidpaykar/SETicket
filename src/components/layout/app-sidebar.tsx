@@ -124,7 +124,7 @@ export default function AppSidebar() {
                             <Collapsible key={subItem.title} asChild>
                               <SidebarMenuSubItem>
                                 <CollapsibleTrigger asChild>
-                                  <SidebarMenuSubButton>x1
+                                  <SidebarMenuSubButton>
                                     <span className="text-sm">{subItem.title}</span>
                                     <IconChevronRight className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
                                   </SidebarMenuSubButton>
