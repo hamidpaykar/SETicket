@@ -1,4 +1,4 @@
-import KanbanBoard from '@/features/kanban/componentsv2/kanban-board';
+import KanbanBoard from '@/features/kanban/components/kanban-board';
 
 export const metadata = {
   title: 'Dashboard : Kanban view'
